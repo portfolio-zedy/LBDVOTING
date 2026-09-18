@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LBD Voting Platform — Welcome</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="welcome">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <img class="header-logo" src="logo.png" alt="LBD Voting Platform logo">
+      <span class="org-name">LBD Voting Platform</span>
+    </div>
+  </header>
+
+  <div class="time-strip">
+    <span id="live-date"></span><span class="sep" aria-hidden="true">·</span><span id="live-time" class="time-value"></span>
+  </div>
+
+  <main class="hero">
+    <div class="hero-inner">
+      <img class="hero-logo" src="logo.png" alt="LBD Voting Platform emblem">
+
+      <p class="hero-eyebrow">Official Election Portal</p>
+
+      <h1 class="hero-title">LBD Voting Platform</h1>
+
+      <div class="hero-divider" aria-hidden="true"><span></span>✦<span></span></div>
+
+      <blockquote class="hero-quote">
+        “Where there is no guidance, a people falls, but in an abundance
+        of counselors there is safety.”
+        <cite>— Proverbs 11:14</cite>
+      </blockquote>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-large" href="vote.html">GO TO VOTING <span class="btn-arrow">→</span></a>
+        <a class="btn btn-outline btn-large" href="results.html">
+          <span class="live-dot" aria-hidden="true"></span>View Live Results
+        </a>
+      </div>
+
+      <p id="vote-status" class="vote-status" hidden></p>
+
+      <ol class="hero-steps">
+        <li><span>1</span>Vote</li>
+        <li><span>2</span>View Results</li>
+      </ol>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> LBD Voting Platform · Let your voice be counted</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

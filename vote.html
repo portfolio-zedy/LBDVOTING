@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cast Your Vote — LBD Voting Platform</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="vote">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="home-link" href="index.html" aria-label="Back to Home" title="Back to Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </a>
+      <img class="header-logo" src="logo.png" alt="LBD Voting Platform logo">
+      <span class="org-name">LBD Voting Platform</span>
+    </div>
+  </header>
+
+  <div class="time-strip">
+    <span id="live-date"></span><span class="sep" aria-hidden="true">·</span><span id="live-time" class="time-value"></span>
+  </div>
+
+  <main class="container vote-main">
+    <div id="vote-loading" class="loading-block">
+      <div class="spinner"></div>
+      <p class="muted">Preparing your ballot…</p>
+    </div>
+
+    <div id="vote-load-error" class="error-box" role="alert" hidden></div>
+    <button id="retry-btn" class="btn btn-outline btn-block" hidden>Try Again</button>
+
+    <!-- Shown when voting hasn't started or has ended -->
+    <div id="vote-status-panel" class="status-panel" hidden>
+      <span id="status-badge" class="status-badge"></span>
+      <h2 id="status-title"></h2>
+      <p id="status-msg" class="muted"></p>
+      <a id="status-results-btn" class="btn btn-primary" href="results.html" hidden>View Results</a>
+      <a id="status-home-btn" class="btn btn-outline" href="index.html">Back to Home</a>
+    </div>
+
+    <div id="ballot" hidden>
+      <h1 class="page-title">Official Ballot</h1>
+      <p id="vote-progress" class="progress-text"></p>
+
+      <div id="vote-sections"></div>
+
+      <div id="vote-error" class="error-box" role="alert" hidden></div>
+
+      <button id="submit-vote-btn" class="btn btn-primary btn-block" disabled>Submit My Vote</button>
+      <p id="vote-ends" class="ends-note small center" hidden></p>
+      <p class="muted small center">Please review your choices — a vote cannot be changed once submitted.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> LBD Voting Platform</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
