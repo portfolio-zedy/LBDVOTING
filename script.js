@@ -9,7 +9,7 @@
 
 const CONFIG = {
   // Paste your deployed Apps Script Web App URL here (must end in /exec):
-  APPS_SCRIPT_URL: 'PASTE_DEPLOYED_URL_HERE',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby3hEN_jnaDIwWx64-hW_Xi270mMcASA9XEPgZKKhAy85XSg264EONaJxU4kk0ybSQhbw/exec',
 
   RESULTS_REFRESH_MS: 30000,
   DEVICE_ID_KEY: 'lbd_device_id'
