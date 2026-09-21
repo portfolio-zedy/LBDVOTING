@@ -1,14 +1,18 @@
 /* ============================================================
    LBD VOTING PLATFORM — Central Front-End Script
-   Free-voting edition: no registration. Voting window is
-   controlled by the "Settings" tab of the spreadsheet.
+   Free-voting edition + one-vote-per-device control.
+   The device ID is a fingerprint (hardware/browser traits)
+   hashed with a persistent local ID. Browsers cannot read
+   MAC addresses, so this is the strongest available
+   device-level identifier for a website.
    ============================================================ */
 
 const CONFIG = {
   // Paste your deployed Apps Script Web App URL here (must end in /exec):
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby3hEN_jnaDIwWx64-hW_Xi270mMcASA9XEPgZKKhAy85XSg264EONaJxU4kk0ybSQhbw/exec',
+  APPS_SCRIPT_URL: 'PASTE_DEPLOYED_URL_HERE',
 
-  RESULTS_REFRESH_MS: 3000000
+  RESULTS_REFRESH_MS: 30000,
+  DEVICE_ID_KEY: 'lbd_device_id'
 };
 
 /* ---------------- Tiny helpers ---------------- */
@@ -45,6 +49,80 @@ function requireBackend() {
 function formatDateTime(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+/* ---------------- Device ID (one vote per device) ----------------
+   Combine (a) a persistent random ID stored in localStorage with
+   (b) a fingerprint of stable device traits. The fingerprint part
+   survives localStorage clearing and incognito mode; the random
+   part keeps the ID unguessable and stable across fingerprint
+   noise. Returns a SHA-256 hex string (with a fallback hash for
+   non-secure contexts). */
+
+async function getDeviceId() {
+  // (a) Persistent local ID
+  let stored = localStorage.getItem(CONFIG.DEVICE_ID_KEY);
+  if (!stored) {
+    stored = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    try { localStorage.setItem(CONFIG.DEVICE_ID_KEY, stored); } catch (e) { /* private mode */ }
+  }
+
+  // (b) Device fingerprint from stable traits
+  const traits = [
+    navigator.userAgent,
+    navigator.language,
+    (navigator.languages || []).join(','),
+    screen.width + 'x' + screen.height + 'x' + (screen.colorDepth || 24),
+    String(new Date().getTimezoneOffset()),
+    navigator.hardwareConcurrency || '',
+    navigator.deviceMemory || '',
+    canvasSignature()
+  ].join('|');
+
+  const material = stored + '|' + traits;
+
+  // Prefer SHA-256 (needs HTTPS, which GitHub Pages provides).
+  if (window.crypto && crypto.subtle && window.isSecureContext) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(material));
+      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) { /* fall through to simple hash */ }
+  }
+  return 'f-' + simpleHash(material);
+}
+
+/** Small canvas render that differs slightly across devices/GPUs. */
+function canvasSignature() {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 220; c.height = 40;
+    const ctx = c.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = "16px 'Arial'";
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(0, 0, 100, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('LBD-vote-fp \u{1F512}', 2, 12);
+    const data = c.toDataURL();
+    return data.slice(-64);
+  } catch (e) {
+    return 'nocanvas';
+  }
+}
+
+/** Deterministic fallback hash (not cryptographic, fine as fallback). */
+function simpleHash(str) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36) + '-' + str.length;
 }
 
 /* ---------------- API layer ----------------
@@ -271,13 +349,18 @@ function initVotePage() {
     hide(errorBox);
     setLoading(submitBtn, true, 'Submitting your vote…');
     try {
-      const data = await apiPost({ action: 'submitVote', votes: selections });
+      const deviceId = await getDeviceId();
+      const data = await apiPost({ action: 'submitVote', votes: selections, deviceId: deviceId });
+
       if (data.status === 'success') {
         window.location.href = 'results.html?voted=1';
       } else {
         setLoading(submitBtn, false);
         const msg = (data.message || '').toLowerCase();
-        if (msg.includes('over') || msg.includes('closed')) {
+        if (msg.includes('already voted')) {
+          // Device has voted before -> straight to results.
+          window.location.href = 'results.html?notice=already';
+        } else if (msg.includes('over') || msg.includes('closed')) {
           renderStatusPanel('ended');
         } else if (msg.includes('not started')) {
           renderStatusPanel('not_started');
@@ -319,6 +402,13 @@ function initVotePage() {
 function initResultsPage() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('voted')) show($('#thankyou-banner'));
+  if (params.get('notice') === 'already') {
+    const b = $('#already-banner');
+    if (b) {
+      b.innerHTML = '<strong>This device has already voted.</strong> Only one vote per device is allowed. Here are the current results.';
+      show(b);
+    }
+  }
 
   // Show the "voting has ended" banner when appropriate.
   apiGet('getVotingStatus').then((st) => {
